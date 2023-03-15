@@ -1,0 +1,29 @@
+Num of Nodes: 60
+Num of Flows:5
+flow = 5
+[10, 5, 5, 5, 5, 5, 5, 5, 5] 
+
+Num of Nodes: 76
+Num of Flows:10
+flow = 10
+[16, 5, 5, 5, 5, 5, 5, 5, 5]
+
+Num of Nodes: 583
+Num of Flows:20
+flow = 20
+[130, 50, 83, 50, 60, 70, 10, 10, 80]
+
+Num of Nodes: 740
+Num of Flows:25
+flow = 25 
+
+
+Num of Nodes: 940
+Num of Flows:30
+flow = 30 
+[100, 100, 120, 60, 80, 110, 120, 100, 90]
+
+
+in addition:
+300 nodes
+250-300 flows
