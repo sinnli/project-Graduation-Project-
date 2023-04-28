@@ -69,21 +69,29 @@ if (__name__ == "__main__"):
             if i >= INITIAL_EXPLORE_STEPS:  # Have gathered enough experiences, start training the agents
                 Q_loss = agents[-1].train(memory, priority_ImpSamp_beta.value(i-1-INITIAL_EXPLORE_STEPS))
                 assert not np.isnan(Q_loss)
+                print("Q_loss")
+                print(Q_loss)
                 if (i % TARGET_NET_SYNC_FREQUENCY == 0):
                     agents[-1].sync_target_network()
                 if (i % EVALUATE_FREQUENCY == 0):
                     for agent in agents[:-1]: # load the currently trained model parameters to evaluate
                         agent.sync_main_network_from_another_agent(agents[-1])
                     eval_results = evaluate.evaluate_routing(adhocnet, agents, method, n_layouts=3)
-                    meanCapacity  = np.mean(eval_results[:, :, 6])
+                    meanCapacity  = np.mean(np.mean(np.mean(eval_results[:, :, 5],axis = 1)))
+                    print("mean Cap")
+                    print(meanCapacity)
                     min_bottleneck_rate_avg = np.mean(np.min(eval_results[:, :, 0],axis=1))/1e6
+                    print("min_bottleneck")
+                    print(min_bottleneck_rate_avg)
                     Packets_reached = np.mean(eval_results[:, :, 3])
                     reach_packets = Packets_reached / num_packets * 100
+                    print("reach_packets")
+                    print(reach_packets)
                     x5 = eval_results[:, :, 1]
                     num_links = np.mean(eval_results[:, :, 1])
                     tot_power = np.mean(eval_results[:, :, 4])
-                    print("Q loss: {:.3f}; Min Bottleneck Rate(mbps): {:.3g}; Num Packets Reached(%): {:.2f}; Capacity:{:.3f}".format(
-                        Q_loss, min_bottleneck_rate_avg, reach_packets,meanCapacity))
+
+                    print("Q loss: {:.3f}; Min Bottleneck Rate(mbps): {:.3g}; Num Packets Reached(%): {:.2f}; Capacity:{:.3f}".format(Q_loss, min_bottleneck_rate_avg, reach_packets,meanCapacity))
                     with open("Cap.txt", "a") as file:
                         file.write("Nodes:{}, Flows:{}, Capacity:{}\n".format(adhocnet.n_nodes,adhocnet.n_flows,meanCapacity))
                     metrics[metrics_index].append([i, Q_loss, min_bottleneck_rate_avg, reach_packets, num_links, tot_power])

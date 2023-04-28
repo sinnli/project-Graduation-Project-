@@ -62,14 +62,14 @@ AdHocLayoutSettings = {
           "n_flows": 5,
           "n_bands": 8,
           "transmit_power": TX_POWER,
-          #"txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=5, separation_fraction=1 / 5),
+          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=5, separation_fraction=1 / 5),
           "mobile_nodes_distrib": [6, 8, 7, 6, 5, 10, 8, 9, 6]
           },
     'E': {"field_length": 100000,
           "n_flows":30,
           "n_bands": 8,
           "transmit_power": TX_POWER,
-         # "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=30, separation_fraction=1 / 30),
+          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=30, separation_fraction=1 / 30),
           "mobile_nodes_distrib":[100, 100, 120, 60, 80, 110, 120, 100, 90]
           },  #comes out to be with 60 nodes in the network
     'F': {"field_length": 50,
@@ -86,12 +86,12 @@ class AdHoc_Wireless_Net():
     def __init__(self):
         self.counter = 0
         self.test_time = time.time()
-        self.layout_setting = AdHocLayoutSettings['F']
+        self.layout_setting = AdHocLayoutSettings['D']
         self.field_length = self.layout_setting['field_length']
         self.n_flows = self.layout_setting['n_flows']
         self.transmit_power = self.layout_setting['transmit_power']
         self.flows = []
-        """
+
         for i in range(self.n_flows):
             destination = np.random.randint(i+1, self.n_flows*2-1)
             self.flows.append(Data_Flow(flow_id=i, src=i, dest=destination))
@@ -109,7 +109,8 @@ class AdHoc_Wireless_Net():
         self.powers = np.zeros([self.n_bands, self.n_nodes])
         self.energy = INITIAL_ENERGY
         self.update_layout()
-       """
+
+        """
         self.n_nodes = 64
         for i in range(self.n_flows):
             random_nums =[j for j in range(0, self.n_nodes)]
@@ -130,6 +131,7 @@ class AdHoc_Wireless_Net():
         self.powers = np.zeros([self.n_bands, self.n_nodes])
         self.energy = INITIAL_ENERGY
         self.update_layout()
+        """
 
     # Refreshing on a larger time scale
     def update_layout(self):
@@ -147,7 +149,7 @@ class AdHoc_Wireless_Net():
             y = np.random.uniform(low=j/3*self.field_length, high=(j+1)/3*self.field_length, size=[self.layout_setting["mobile_nodes_distrib"][index], 1])
             self.nodes_locs = np.concatenate([self.nodes_locs, np.concatenate([x, y], axis=1)], axis=0)
         #take the first 64 locs
-        self.nodes_locs= self.nodes_locs[:64]
+        self.nodes_locs= self.nodes_locs[:] # :64]
         assert np.shape(self.nodes_locs) == (self.n_nodes, 2)
         self.nodes_distances = squareform(pdist(self.nodes_locs))
         assert np.min(np.eye(self.n_nodes) + self.nodes_distances) >= 0
@@ -189,7 +191,7 @@ class AdHoc_Wireless_Net():
         for flow in self.flows:
             links = flow.get_links()
             link_factor += len(links)
-            duration_time.append(np.int(flow.get_start_time() - now))
+            duration_time.append(np.float64(now -flow.get_start_time()))
         link_factor = np.power(10, -(link_factor/10))
         duration = np.mean(duration_time)
         duration_factor = np.power(10, -(duration / 10))
@@ -228,6 +230,25 @@ class AdHoc_Wireless_Net():
         angle = np.arctan2(delta_y, delta_x)
         angle = 2*np.pi + angle if angle < 0 else angle # convert to continuous 0~2pi range
         return angle
+
+
+    def move_layout(self):
+        #print("The nodes locactions of the network:")
+        # print(self.nodes_locs)
+        epsilon1 = np.random.rand(75,2)*10
+        epsilon2 = np.random.rand(75,2)*10
+        epsilon = epsilon1-epsilon2
+        self.nodes_locs+=epsilon
+        for node in self.nodes_locs:
+            for i in range(0,2):
+                if (node[i]<0):
+                    node[i] = 0
+                elif (node[i]>self.field_length):
+                    node[i] = self.field_length
+
+        return
+
+
 
     def visualize_layout(self):
         fig, ax = plt.subplots()

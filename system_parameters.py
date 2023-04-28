@@ -30,7 +30,7 @@ torch.manual_seed(RANDOM_SEED)
 delta_param = 0.5
 MAX_REWARD = 10
 Power_levels = 6
-INITIAL_ENERGY = 100
+INITIAL_ENERGY = 150#100
 num_packets = 100
 nodes_explored = 10
 # num_packets = np.random.randint(2, 10)

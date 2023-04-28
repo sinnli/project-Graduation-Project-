@@ -159,7 +159,7 @@ class Agent():
         tmp_states.append(packet_distance)
         # State 4: device package queue length.
         tmp_states.append(len(self.flow.flow_packets))
-        # state 5: device remaining energy.
+        # state 5: device remaining energy of the signal that was sent
         tmp_states.append(self.adhocnet.get_remain_energy())
         # neighbor states
         for neighbor in available_neighbors:
