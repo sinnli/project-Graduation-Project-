@@ -11,7 +11,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
 # 'DDQN_Q_Novel',
 #METHODS =  ['Max Reward','Closest to Destination','Best Direction','Least Interfered', 'Strongest Neighbor']#, 'Largest Data Rate']
-METHODS = ['Max Reward']
+METHODS = ['Max Reward', 'Strongest Neighbor']
 
 #, 'Destination Directly'  'Best Direction','Least Interfered',
 
@@ -19,7 +19,7 @@ N_ROUNDS = 2
 METHOD_PLOT_COLORS = cm.rainbow(np.linspace(1, 0, len(METHODS)))
 # select Plot type
 # PLOT_TYPE = "SumRate" "Rate" "Reach" "Power"
-PLOT_TYPE = "SumRate"
+PLOT_TYPE = "Power"
 
 def method_caller(agent, method, visualize_axis=None):
     if method == 'DDQN_Q_Novel':
@@ -54,7 +54,6 @@ def sequential_routing(agents, method):
             method_caller(agent, method)
     for agent in agents:
         while not agent.flow.destination_reached():
-            adhocnet.move_layout()  # add field lenght if
             method_caller(agent, method)
     # compute bottleneck SINR to determine the routing for the sequential rounds
     for i in range(N_ROUNDS-1):

@@ -159,7 +159,7 @@ class Agent():
         tmp_states.append(packet_distance)
         # State 4: device package queue length.
         tmp_states.append(len(self.flow.flow_packets))
-        # state 5: device remaining energy of the signal that was sent
+        # state 5: device remaining energy.
         tmp_states.append(self.adhocnet.get_remain_energy())
         # neighbor states
         for neighbor in available_neighbors:
@@ -223,7 +223,11 @@ class Agent():
             whether_done = (rx==self.flow.dest)
             transactions.append((state, action, reward, whether_done))
         self.flow.bottleneck_rate = np.min(rates_onwards)
-        self.meanCap = np.mean(rates_onwards)
+        if len(np.shape(np.mean(rates_onwards)))!= 1:
+            self.meanCap = np.mean(rates_onwards)
+            print("was here for meanCap")
+        else:
+            self.meanCap = np.mean(rates_onwards)
         self.flow.tot_power = tot_power
         if memory!=None: # have to compare to None, since replay memory object has __len__() defined, empty would result in false
             for transaction in transactions[::-1]: # ordering matters within the replay buffer
@@ -255,7 +259,13 @@ class Agent():
         minibatch_size = np.shape(states)[0]
         self._main_net.train()
         self.optimizer.zero_grad()
-        actions = actions[:,0].astype(np.int)
+        print("in trainQnovel")
+        print(actions)
+        print(actions[0])
+        actions = actions[0].astype(int)
+        print("in trainQnovel")
+        print(actions)
+        #actions = actions[:, 0].astype(np.int)
         Qs = self.main_net_predict(states)[np.arange(minibatch_size), actions]
         errors = self.loss_func(Qs, torch.tensor(rewards,dtype=torch.float32).to(DEVICE))
         loss = torch.mean(errors*torch.tensor(importance_weights, dtype=torch.float32).to(DEVICE))

@@ -11,6 +11,9 @@ from scipy.spatial.distance import pdist, squareform
 from system_parameters import *
 from data_flow import Data_Flow
 
+#import warnings
+#warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 def prepare_tx_rx_location_ratios(n_flows, separation_fraction):
     n1 = int(np.ceil(n_flows/2))#int(np.ceil(n_flows/2))
     n2 = int(np.ceil(n_flows)) - n1
@@ -58,12 +61,12 @@ AdHocLayoutSettings = {
           #"txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=10, separation_fraction=1 / 20),
           "mobile_nodes_distrib": [36, 34, 42, 38, 46, 40, 54, 45, 42]
           },
-    'D': {"field_length": 1000,
+    'D': {"field_length": 100,
           "n_flows": 5,
-          "n_bands": 8,
+          "n_bands": 50,
           "transmit_power": TX_POWER,
-          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=5, separation_fraction=1 / 5),
-          "mobile_nodes_distrib": [6, 8, 7, 6, 5, 10, 8, 9, 6]
+          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=5, separation_fraction=1 / 100),
+          "mobile_nodes_distrib": [100, 100, 100, 100, 100, 100, 100, 100, 100]
           },
     'E': {"field_length": 100000,
           "n_flows":30,
@@ -109,6 +112,9 @@ class AdHoc_Wireless_Net():
         self.powers = np.zeros([self.n_bands, self.n_nodes])
         self.energy = INITIAL_ENERGY
         self.update_layout()
+        self.remain_energy = 0
+        self.duration_factor_r = 0
+        self.link_factor_r = 0
 
         """
         self.n_nodes = 64
@@ -133,6 +139,7 @@ class AdHoc_Wireless_Net():
         self.update_layout()
         """
 
+
     # Refreshing on a larger time scale
     def update_layout(self):
         # ensure the network is cleared
@@ -149,7 +156,7 @@ class AdHoc_Wireless_Net():
             y = np.random.uniform(low=j/3*self.field_length, high=(j+1)/3*self.field_length, size=[self.layout_setting["mobile_nodes_distrib"][index], 1])
             self.nodes_locs = np.concatenate([self.nodes_locs, np.concatenate([x, y], axis=1)], axis=0)
         #take the first 64 locs
-        self.nodes_locs= self.nodes_locs[:] # :64]
+        self.nodes_locs= self.nodes_locs[:]#64]
         assert np.shape(self.nodes_locs) == (self.n_nodes, 2)
         self.nodes_distances = squareform(pdist(self.nodes_locs))
         assert np.min(np.eye(self.n_nodes) + self.nodes_distances) >= 0
@@ -191,10 +198,24 @@ class AdHoc_Wireless_Net():
         for flow in self.flows:
             links = flow.get_links()
             link_factor += len(links)
-            duration_time.append(np.float64(now -flow.get_start_time()))
-        link_factor = np.power(10, -(link_factor/10))
+            duration_time.append(np.float64(now-flow.get_start_time()))
+        if np.power(10, -(link_factor/10)) == float("inf"):
+            link_factor = self.link_factor_r
+            print("link factor reached inf")
+        else:
+            link_factor = np.power(10, -(link_factor / 10))
+            self.link_factor_r = link_factor
         duration = np.mean(duration_time)
-        duration_factor = np.power(10, -(duration / 10))
+        if np.power(10, -(duration / 10)) == float("inf"):
+            duration_factor = self.duration_factor_r
+            print("duration factor reached inf")
+        else:
+            duration_factor = np.power(10, -(duration / 10))
+            self.duration_factor_r = duration_factor
+        if duration_factor * link_factor * self.energy == float("inf"):
+            print("remain energy reached inf")
+            return self.remain_energy
+        self.remain_energy = duration_factor * link_factor * self.energy
         return duration_factor * link_factor * self.energy
 
     def clear_flow(self, flow_id):
@@ -230,25 +251,6 @@ class AdHoc_Wireless_Net():
         angle = np.arctan2(delta_y, delta_x)
         angle = 2*np.pi + angle if angle < 0 else angle # convert to continuous 0~2pi range
         return angle
-
-
-    def move_layout(self):
-        #print("The nodes locactions of the network:")
-        # print(self.nodes_locs)
-        epsilon1 = np.random.rand(75,2)*10
-        epsilon2 = np.random.rand(75,2)*10
-        epsilon = epsilon1-epsilon2
-        self.nodes_locs+=epsilon
-        for node in self.nodes_locs:
-            for i in range(0,2):
-                if (node[i]<0):
-                    node[i] = 0
-                elif (node[i]>self.field_length):
-                    node[i] = self.field_length
-
-        return
-
-
 
     def visualize_layout(self):
         fig, ax = plt.subplots()

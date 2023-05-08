@@ -108,7 +108,24 @@ class Replay_Memory():
             rewards.append(reward)
             next_states.append(next_state)
             episode_dones.append(episode_done)
-        return np.array(states), np.array(actions), np.array(rewards), np.array(next_states), np.array(episode_dones)
+        print("Actions:::::::::::::::::::::::::::::::::::::")
+        print(actions)
+        first_elements = [sublist[0] for sublist in actions]
+        second_elements = [sublist[1] for sublist in actions]
+        # Convert the separate lists to numpy arrays
+        first_array = np.array(first_elements)
+        second_array = np.array(second_elements)
+        # Combine the two arrays into a single numpy array
+        actions = np.column_stack((first_array, second_array))
+        actions = actions.flatten()[:64].reshape((64,))
+        print("SHapesssssssssssssssssssssssssssssssssssssss")
+        print(np.array(states).shape)
+        print(actions.shape)
+        #print(np.array(rewards).shape)
+        #print(np.array(next_states).shape)
+        #print(np.array(episode_dones).shape)
+
+        return np.array(states), actions, np.array(rewards), np.array(next_states), np.array(episode_dones)
 
 class Prioritized_Replay_Memory(Replay_Memory):
     def __init__(self, size):
