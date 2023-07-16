@@ -77,7 +77,7 @@ if (__name__ == "__main__"):
                     for agent in agents[:-1]: # load the currently trained model parameters to evaluate
                         agent.sync_main_network_from_another_agent(agents[-1])
                     eval_results = evaluate.evaluate_routing(adhocnet, agents, method, n_layouts=3)
-                    meanCapacity = np.mean(np.mean(np.mean(eval_results[:, :, 5],axis = 1)))
+                    meanCapacity  = np.mean(np.mean(np.mean(eval_results[:, :, 5],axis = 1)))
                     print("mean Cap")
                     print(meanCapacity)
                     min_bottleneck_rate_avg = np.mean(np.min(eval_results[:, :, 0],axis=1))/1e6

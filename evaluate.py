@@ -80,15 +80,9 @@ def evaluate_routing(adhocnet, agents, method, n_layouts):
         for agent in agents:
             results.append([agent.flow.bottleneck_rate, len(agent.flow.get_links()),
                             agent.flow.get_number_of_reprobes(), agent.flow.number_reached_packets(),
-                            agent.flow.tot_power, np.mean(agent.adhocnet.used_bands)]) #agent.capacity
-                            #np.mean was added to used_bands since it is a array
+                            agent.flow.tot_power, agent.adhocnet.used_bands]) #agent.capacity
         for agent in agents:
             agent.reset()
-    print("shape of results")
-    print(results[0])
-    print("************")
-    print(results[1])
-
     results = np.array(results); assert np.shape(results)==(n_layouts*adhocnet.n_flows, 6)
     results = np.reshape(results, (n_layouts, adhocnet.n_flows, 6))
     return results

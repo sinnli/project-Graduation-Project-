@@ -11,9 +11,6 @@ from scipy.spatial.distance import pdist, squareform
 from system_parameters import *
 from data_flow import Data_Flow
 
-#import warnings
-#warnings.filterwarnings("ignore", category=RuntimeWarning)
-
 def prepare_tx_rx_location_ratios(n_flows, separation_fraction):
     n1 = int(np.ceil(n_flows/2))#int(np.ceil(n_flows/2))
     n2 = int(np.ceil(n_flows)) - n1
@@ -44,7 +41,7 @@ AdHocLayoutSettings = {
           "n_flows": 2,
           "n_bands": 8,
           "transmit_power": TX_POWER,
-         # "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=2, separation_fraction=1/5),
+          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=2, separation_fraction=1/5),
           "mobile_nodes_distrib": [6, 8, 7, 6, 5, 10, 8, 9, 6]
           },
     'B': {"field_length": 5000,
@@ -61,25 +58,25 @@ AdHocLayoutSettings = {
           #"txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=10, separation_fraction=1 / 20),
           "mobile_nodes_distrib": [36, 34, 42, 38, 46, 40, 54, 45, 42]
           },
-    'D': {"field_length": 100,
+    'D': {"field_length": 1000,
           "n_flows": 5,
-          "n_bands": 50,
+          "n_bands": 8,
           "transmit_power": TX_POWER,
-          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=5, separation_fraction=1 / 100),
-          "mobile_nodes_distrib": [100, 100, 100, 100, 100, 100, 100, 100, 100]
+          #"txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=5, separation_fraction=1 / 5),
+          "mobile_nodes_distrib": [6, 8, 7, 6, 5, 10, 8, 9, 6]
           },
     'E': {"field_length": 100000,
           "n_flows":30,
           "n_bands": 8,
           "transmit_power": TX_POWER,
-          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=30, separation_fraction=1 / 30),
+          #"txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=30, separation_fraction=1 / 30),
           "mobile_nodes_distrib":[100, 100, 120, 60, 80, 110, 120, 100, 90]
           },  #comes out to be with 60 nodes in the network
     'F': {"field_length": 50,
           "n_flows": 300,
           "n_bands": 25,
           "transmit_power": TX_POWER,
-          "txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=300, separation_fraction=1 / 60),
+          #"txs_rxs_length_ratios": prepare_tx_rx_location_ratios(n_flows=300, separation_fraction=1 / 60),
           "mobile_nodes_distrib": [10,10,10,10,10,10,10,10,10]
           }
 }
@@ -89,7 +86,7 @@ class AdHoc_Wireless_Net():
     def __init__(self):
         self.counter = 0
         self.test_time = time.time()
-        self.layout_setting = AdHocLayoutSettings['D']
+        self.layout_setting = AdHocLayoutSettings['A']
         self.field_length = self.layout_setting['field_length']
         self.n_flows = self.layout_setting['n_flows']
         self.transmit_power = self.layout_setting['transmit_power']
@@ -112,9 +109,6 @@ class AdHoc_Wireless_Net():
         self.powers = np.zeros([self.n_bands, self.n_nodes])
         self.energy = INITIAL_ENERGY
         self.update_layout()
-        self.remain_energy = 0
-        self.duration_factor_r = 0
-        self.link_factor_r = 0
 
         """
         self.n_nodes = 64
@@ -198,24 +192,10 @@ class AdHoc_Wireless_Net():
         for flow in self.flows:
             links = flow.get_links()
             link_factor += len(links)
-            duration_time.append(np.float64(now-flow.get_start_time()))
-        if np.power(10, -(link_factor/10)) == float("inf"):
-            link_factor = self.link_factor_r
-            print("link factor reached inf")
-        else:
-            link_factor = np.power(10, -(link_factor / 10))
-            self.link_factor_r = link_factor
+            duration_time.append(np.float64(now -flow.get_start_time()))
+        link_factor = np.power(10, -(link_factor/10))
         duration = np.mean(duration_time)
-        if np.power(10, -(duration / 10)) == float("inf"):
-            duration_factor = self.duration_factor_r
-            print("duration factor reached inf")
-        else:
-            duration_factor = np.power(10, -(duration / 10))
-            self.duration_factor_r = duration_factor
-        if duration_factor * link_factor * self.energy == float("inf"):
-            print("remain energy reached inf")
-            return self.remain_energy
-        self.remain_energy = duration_factor * link_factor * self.energy
+        duration_factor = np.power(10, -(duration / 10))
         return duration_factor * link_factor * self.energy
 
     def clear_flow(self, flow_id):
@@ -251,6 +231,25 @@ class AdHoc_Wireless_Net():
         angle = np.arctan2(delta_y, delta_x)
         angle = 2*np.pi + angle if angle < 0 else angle # convert to continuous 0~2pi range
         return angle
+
+
+    def move_layout(self):
+        #print("The nodes locactions of the network:")
+        # print(self.nodes_locs)
+        epsilon1 = np.random.rand(69,2)*10
+        epsilon2 = np.random.rand(69,2)*10
+        epsilon = epsilon1-epsilon2
+        self.nodes_locs+=epsilon
+        for node in self.nodes_locs:
+            for i in range(0,2):
+                if (node[i]<0):
+                    node[i] = 0
+                elif (node[i]>self.field_length):
+                    node[i] = self.field_length
+
+        return
+
+
 
     def visualize_layout(self):
         fig, ax = plt.subplots()
